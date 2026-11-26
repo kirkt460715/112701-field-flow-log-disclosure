@@ -1,0 +1,37 @@
+[
+  {
+    "id": "raw-1",
+    "origin": "county-a",
+    "minutes": [
+      20,
+      25
+    ],
+    "fields": [
+      "site_token",
+      "count"
+    ],
+    "devices": 12
+  },
+  {
+    "id": "raw-2",
+    "origin": "county-b",
+    "minutes": [
+      20,
+      25
+    ],
+    "fields": [
+      "site_token",
+      "count"
+    ],
+    "devices": 2
+  },
+  {
+    "id": "rollup-1",
+    "origin": "county-b",
+    "minutes": [
+      20,
+      45
+    ],
+    "devices": 19
+  }
+]

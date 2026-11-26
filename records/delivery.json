@@ -1,0 +1,26 @@
+[
+  {
+    "id": "view-raw",
+    "entry": "raw-2",
+    "grant": "grant-v1",
+    "accessed_at": 44
+  },
+  {
+    "id": "pending-2",
+    "entry": "raw-2",
+    "created": 46,
+    "state": "in_transit"
+  },
+  {
+    "id": "del-1",
+    "entry": "rollup-1",
+    "state": "received",
+    "receipt_at": 48
+  },
+  {
+    "id": "recall-2",
+    "for": "pending-2",
+    "state": "requested",
+    "acknowledgment": null
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "grant-v1",
+    "origin": "county-b",
+    "group": "joint-team",
+    "purposes": [
+      "outage_review"
+    ],
+    "fields": [
+      "site_token",
+      "count"
+    ],
+    "min_aggregate_members": 5,
+    "effective": 0
+  },
+  {
+    "id": "grant-v2",
+    "for": "grant-v1",
+    "fields": [
+      "count"
+    ],
+    "effective": 50
+  },
+  {
+    "id": "reassign",
+    "from": "joint-team",
+    "to": "vendor-desk",
+    "day": 51
+  }
+]

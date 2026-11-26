@@ -1,0 +1,16 @@
+[
+  {
+    "id": "pending-4",
+    "entry": "raw-4",
+    "created": 61,
+    "state": "in_transit",
+    "fields": ["site_token", "count"],
+    "note_zh": "队列中的包裹仍按旧模板携带 site_token，交前审阅必须拦下来"
+  },
+  {
+    "id": "view-3",
+    "entry": "raw-3",
+    "grant": "grant-v3",
+    "accessed_at": 62
+  }
+]

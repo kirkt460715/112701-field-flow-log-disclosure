@@ -1,0 +1,23 @@
+[
+  {
+    "id": "raw-3",
+    "origin": "county-a",
+    "minutes": [60, 65],
+    "fields": ["site_token", "count"],
+    "devices": 9
+  },
+  {
+    "id": "raw-4",
+    "origin": "county-b",
+    "minutes": [60, 65],
+    "fields": ["site_token", "count"],
+    "devices": 6,
+    "sampling_note": "t=60 起探针采样率由 1/1 调整为 1/2，设备数为去重估算值，跨期计数不要直接相减。"
+  },
+  {
+    "id": "rollup-2",
+    "origin": "county-b",
+    "minutes": [60, 90],
+    "devices": 22
+  }
+]

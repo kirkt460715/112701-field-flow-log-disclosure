@@ -1,0 +1,19 @@
+[
+  {
+    "id": "grant-v3",
+    "origin": "county-a",
+    "group": "joint-team",
+    "purposes": ["outage_review"],
+    "fields": ["count", "site_token"],
+    "min_aggregate_members": 8,
+    "effective": 60,
+    "note_zh": "下一期：county-a 首次给予事件明细许可，但最小聚合阈值提高到 8"
+  },
+  {
+    "id": "grant-v4",
+    "for": "grant-v1",
+    "effective": 70,
+    "expires": 180,
+    "note_zh": "county-b 的 count-only 约定续期到 t=180，site_token 继续不可用"
+  }
+]

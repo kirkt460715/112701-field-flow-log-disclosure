@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>绿化专网共享许可 · 防御性审核台</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #ffffff; --ink: #0f172a; --muted: #64748b;
+    --line: #e2e8f0; --brand: #0f766e; --brand-soft: #ccfbf1;
+    --amber: #b45309; --amber-soft: #fef3c7;
+    --red: #b91c1c; --red-soft: #fee2e2;
+    --green: #15803d; --green-soft: #dcfce7;
+    --slate-soft: #f1f5f9; --blue: #1d4ed8; --blue-soft: #dbeafe;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+         background:#f8fafc; color:var(--ink); }
+  header.top { background:linear-gradient(120deg,#134e4a,#0f766e); color:#fff; padding:16px 24px;
+               display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
+  header.top h1 { font-size:19px; margin:0 0 2px; }
+  header.top .sub { font-size:12.5px; opacity:.85; }
+  .clockbar { display:flex; gap:8px; align-items:center; font-size:13px; flex-wrap:wrap; }
+  .clockbar input { width:74px; padding:6px 8px; border-radius:6px; border:1px solid #0d9488; }
+  button { font:inherit; cursor:pointer; border-radius:7px; border:1px solid var(--line);
+           background:#fff; padding:6px 12px; font-size:13px; transition:.12s; }
+  button:hover { border-color:#94a3b8; background:#f8fafc; }
+  button.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  button.primary:hover { background:#115e59; }
+  button.danger { color:var(--red); border-color:#fecaca; }
+  button.danger:hover { background:var(--red-soft); }
+  button.warn { color:var(--amber); border-color:#fde68a; }
+  button.warn:hover { background:var(--amber-soft); }
+  button.mini { padding:3px 9px; font-size:12px; }
+  main { padding:20px 24px 60px; max-width:1320px; margin:0 auto; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .kpi .n { font-size:26px; font-weight:700; }
+  .kpi .l { font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .kpi.amber .n { color:var(--amber); } .kpi.red .n { color:var(--red); }
+  .kpi.green .n { color:var(--green); } .kpi.brand .n { color:var(--brand); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid .full { grid-column:1 / -1; }
+  @media (max-width:980px){ .grid { grid-template-columns:1fr; } }
+  section.card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; }
+  section.card h2 { font-size:15.5px; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+  section.card .hint { font-size:12.5px; color:var(--muted); margin:0 0 12px; }
+  .badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:600;
+           white-space:nowrap; }
+  .b-amber { background:var(--amber-soft); color:var(--amber); }
+  .b-red { background:var(--red-soft); color:var(--red); }
+  .b-green { background:var(--green-soft); color:var(--green); }
+  .b-slate { background:var(--slate-soft); color:#334155; }
+  .b-blue { background:var(--blue-soft); color:var(--blue); }
+  .item { border:1px solid var(--line); border-radius:10px; padding:11px 13px; margin-bottom:10px; }
+  .item:last-child { margin-bottom:0; }
+  .item .row1 { display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; }
+  .item .title { font-weight:650; font-size:13.5px; }
+  .item .meta { font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.7; }
+  .actions { margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; }
+  code, .mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:5px; }
+  .chip { background:var(--slate-soft); border-radius:6px; padding:1px 8px; font-size:12px; }
+  .chip.off { background:var(--red-soft); color:var(--red); text-decoration:line-through; }
+  .chip.on { background:var(--green-soft); color:var(--green); }
+  .chip.new { background:var(--blue-soft); color:var(--blue); }
+  textarea { width:100%; min-height:96px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px;
+             border:1px solid var(--line); border-radius:8px; padding:9px; resize:vertical; }
+  pre.out { background:#0b1220; color:#d1fae5; border-radius:10px; padding:13px; font-size:12px;
+            overflow:auto; max-height:430px; margin:12px 0 0; }
+  .county { border-left:4px solid var(--line); padding-left:12px; margin:10px 0; }
+  .county.blocked { border-left-color:var(--red); }
+  .county.ok { border-left-color:var(--green); }
+  #toast { position:fixed; right:20px; bottom:20px; max-width:420px; display:none; z-index:50;
+           border-radius:10px; padding:11px 15px; font-size:13px; box-shadow:0 10px 30px rgba(2,6,23,.25); }
+  #toast.ok { display:block; background:#064e3b; color:#d1fae5; }
+  #toast.err { display:block; background:#7f1d1d; color:#fee2e2; }
+  .roletabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .statline { font-size:12.5px; color:var(--muted); }
+  .arrow { color:var(--brand); font-weight:700; }
+  .kw { color:var(--red); font-weight:650; }
+  .kwg { color:var(--green); font-weight:650; }
+  table.mini { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.mini td, table.mini th { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; }
+  table.mini th { color:var(--muted); font-weight:600; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>绿化监测专网 · 共享许可防御性审核台</h1>
+    <div class="sub">持续接收许可 · 审阅待交日志 · 跟进撤回回执 ｜ 全部使用本地合成元数据，无外发请求</div>
+  </div>
+  <div class="clockbar">
+    <label>观察时刻 t=<input id="clock-input" data-testid="clock-input" type="number" step="1"></label>
+    <button class="primary" id="clock-apply" data-testid="clock-apply">切换时刻</button>
+    <button id="reset-btn" data-testid="reset-btn" class="danger">重置运行期状态</button>
+  </div>
+</header>
+
+<main data-testid="console-root">
+  <div class="kpis">
+    <div class="kpi brand"><div class="n" id="kpi-pending" data-testid="kpi-pending">–</div><div class="l">尚待送达/在途审阅</div></div>
+    <div class="kpi amber"><div class="n" id="kpi-followups" data-testid="kpi-followups">–</div><div class="l">未结撤回/回执跟进</div></div>
+    <div class="kpi red"><div class="n" id="kpi-coverage" data-testid="kpi-coverage">–</div><div class="l">覆盖不足区间</div></div>
+    <div class="kpi green"><div class="n" id="kpi-summaries" data-testid="kpi-summaries">–</div><div class="l">可以继续使用的汇总</div></div>
+    <div class="kpi" id="balance-card"><div class="n" id="balance-badge" data-testid="balance-badge">–</div><div class="l">投递-回执-撤回核对</div></div>
+  </div>
+
+  <div class="grid">
+    <section class="card full" data-testid="grants-panel">
+      <h2>① 许可接收流（含收窄版本与转派）</h2>
+      <p class="hint">基础许可 + <code>for</code> 修订按 <code>effective</code> 解析；转派只登记事实，不向新组继承任何许可。可粘贴下一期许可 JSON（对象或数组）。</p>
+      <div id="grant-list"></div>
+      <div style="margin-top:12px;">
+        <textarea id="admit-text" data-testid="admit-text" placeholder='{"id":"grant-v3","origin":"county-b","group":"joint-team","purposes":["outage_review"],"fields":["count"],"min_aggregate_members":5,"effective":60}'></textarea>
+        <div class="actions">
+          <button class="primary" id="admit-btn" data-testid="admit-btn">接收许可</button>
+          <button id="admit-sample" data-testid="admit-sample">填入下一期示例许可</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" data-testid="handed-panel">
+      <h2>② 已交给排查组的明细 · 审计留痕</h2>
+      <p class="hint">访问事实不可改写；同时给出收窄后“原用途是否仍合法、还能取什么”。</p>
+      <div id="handed-list" data-testid="handed-list"></div>
+    </section>
+
+    <section class="card" data-testid="queue-panel">
+      <h2>③ 尚待送达队列 · 交前审阅</h2>
+      <p class="hint">按当前时刻许可、用途、数据产生期与最小覆盖审阅；收窄字段必须撤下，覆盖不足则改给更粗范围。</p>
+      <div id="queue-list" data-testid="queue-list"></div>
+    </section>
+
+    <section class="card" data-testid="traffic-panel">
+      <h2>④ 两县合成流量视图 [20,25]</h2>
+      <p class="hint">各县分别满足自己的最小披露约定；设备极少的县分量暂缓暴露明细，并返回可用的更粗范围。</p>
+      <div id="traffic-list" data-testid="traffic-list"></div>
+    </section>
+
+    <section class="card" data-testid="summary-panel">
+      <h2>⑤ 仍有效的汇总订阅</h2>
+      <p class="hint">聚合记录、覆盖达标且无未结撤回的汇总可继续使用。</p>
+      <div id="summary-list" data-testid="summary-list"></div>
+    </section>
+
+    <section class="card full" data-testid="cases-panel">
+      <h2>⑥ 投递状态与撤回回执跟进</h2>
+      <p class="hint">发件端成功不算送达：必须区分 <span class="kwg">确认撤回</span>、<span class="kw">已经收到但待确认删除</span> 与可继续使用的汇总。按钮可演练完整回执链。</p>
+      <div id="case-list" data-testid="case-list"></div>
+    </section>
+
+    <section class="card full" data-testid="roles-panel">
+      <h2>⑦ 角色视图与联合审计最小凭据</h2>
+      <p class="hint">县级管理员只看本县覆盖与撤回进度；收件组只看职责内内容；联合审计只取所执行任务需要的凭据字段。</p>
+      <div class="roletabs">
+        <button id="role-county-a" data-testid="role-county-a">县级管理员 · county-a</button>
+        <button id="role-county-b" data-testid="role-county-b" class="primary">县级管理员 · county-b</button>
+        <button id="role-joint-team" data-testid="role-joint-team">收件组 · joint-team</button>
+        <button id="role-vendor-desk" data-testid="role-vendor-desk" class="warn">转派目标 · vendor-desk</button>
+        <select id="audit-kind" data-testid="audit-kind" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;">
+          <option value="withdrawal_audit">审计任务：撤回核对</option>
+          <option value="access_audit">审计任务：访问留痕</option>
+          <option value="coverage_audit">审计任务：覆盖核对</option>
+        </select>
+        <input id="audit-scope" data-testid="audit-scope" placeholder="范围 id（可空，如 pending-2 / view-raw）"
+               style="padding:6px 9px;border:1px solid var(--line);border-radius:7px;min-width:240px;">
+        <button class="primary" id="audit-run" data-testid="audit-run">生成任务凭据包</button>
+      </div>
+      <pre class="out" id="role-output" data-testid="role-output">选择一个角色或审计任务，结果将显示在这里。</pre>
+    </section>
+  </div>
+</main>
+
+<div id="toast" data-testid="toast"></div>
+
+<script>
+"use strict";
+let DATA = null;
+let currentAt = null;
+
+const $ = (id) => document.getElementById(id);
+function esc(v) {
+  if (v === null || v === undefined) return "–";
+  return String(v).replace(/[&<>"']/g, (c) => (
+    {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function toast(msg, isErr) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = isErr ? "err" : "ok";
+  setTimeout(() => { t.className = ""; t.textContent = ""; }, 4200);
+}
+async function api(path, options) {
+  const res = await fetch(path, options);
+  const body = await res.json();
+  if (!res.ok || body.ok === false) throw new Error(body.error || ("HTTP " + res.status));
+  return body;
+}
+async function postAction(payload) {
+  try {
+    if (currentAt !== null && payload.at === undefined) payload.at = currentAt;
+    await api("/api/action", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload),
+    });
+    toast("操作已登记并留痕");
+    await refresh();
+  } catch (e) { toast(e.message, true); }
+}
+
+function statusBadge(status, zh) {
+  const map = {
+    withdrawal_confirmed: "b-green", usable_summary: "b-green",
+    received_pending_deletion: "b-red", in_transit_recall_pending: "b-amber",
+    in_transit: "b-blue", received_active: "b-slate",
+  };
+  return `<span class="badge ${map[status] || "b-slate"}" data-status="${esc(status)}">${esc(zh || status)}</span>`;
+}
+
+function renderGrants(d) {
+  const rows = d.grant_stream || [];
+  $("grant-list").innerHTML = rows.map((g) => {
+    if (g.from && g.to) {
+      return `<div class="item" data-testid="grant-row-${esc(g.id)}">
+        <div class="row1"><span class="title">🔁 转派 ${esc(g.id)}：${esc(g.from)} <span class="arrow">→</span> ${esc(g.to)}（第 ${esc(g.day)} 天）</span>
+        <span class="badge b-amber">许可不继承</span></div>
+        <div class="meta">vendor-desk 不会因该转派获得 joint-team 的任何字段或许可。</div></div>`;
+    }
+    const rev = g.for ? `修订 <code>${esc(g.id)}</code> → <code>${esc(g.for)}</code>`
+                      : `基础许可 <code>${esc(g.id)}</code>`;
+    return `<div class="item" data-testid="grant-row-${esc(g.id)}">
+      <div class="row1"><span class="title">📜 ${rev} ｜ ${esc(g.origin || "")} → ${esc(g.group || "")}</span>
+      <span class="badge b-blue">effective t=${esc(g.effective ?? 0)}</span></div>
+      <div class="meta">
+        用途：${(g.purposes || []).map(esc).join(", ") || "（修订未改用途）"}<br>
+        字段：<span class="chips">${(g.fields || []).map(f => `<span class="chip on">${esc(f)}</span>`).join("") || "<span class='chip'>（修订未改字段）</span>"}</span>
+        ${g.min_aggregate_members !== undefined ? `<br>最小聚合成员数：<b>${esc(g.min_aggregate_members)}</b>` : ""}
+      </div></div>`;
+  }).join("");
+}
+
+function continuedChips(cu) {
+  const removed = new Set(cu.fields_removed_by_narrowing || []);
+  const nowFields = new Set(cu.fields_now || []);
+  const all = Array.from(new Set([...(cu.fields_at_access || []), ...(cu.fields_now || [])]));
+  return `<span class="chips">${all.map(f => {
+    let cls = nowFields.has(f) ? "on" : "off";
+    let tag = removed.has(f) ? "（收窄撤下）" : "";
+    return `<span class="chip ${cls}">${esc(f)}${tag}</span>`;
+  }).join("")}</span>`;
+}
+
+function renderHanded(d) {
+  const list = d.workbench.handed_details || [];
+  $("handed-list").innerHTML = list.length ? list.map((h) => {
+    const f = h.fact, cu = h.continued_use;
+    return `<div class="item" data-testid="handed-row-${esc(f.id)}">
+      <div class="row1">
+        <span class="title">🗂️ ${esc(f.id)} · ${esc(f.entry)}（${esc(h.origin || "")}）</span>
+        ${f.outcome === "denied" ? '<span class="badge b-red">当前取阅被拒</span>'
+          : '<span class="badge b-slate">访问事实已留审计</span>'}
+      </div>
+      <div class="meta">
+        ${f.accessed_at !== undefined ? `访问时刻 t=${esc(f.accessed_at)}；` : ""}
+        ${f.grant ? `许可 <code>${esc(f.grant)}</code>；` : ""}
+        用途 <code>${esc(f.purpose || "outage_review")}</code><br>
+        收窄后原用途仍合法：<b class="${cu.purpose_still_authorized ? "kwg" : "kw"}">${cu.purpose_still_authorized ? "是" : "否"}</b>；
+        现在可继续取阅：<b class="${cu.retrievable_now ? "kwg" : "kw"}">${cu.retrievable_now ? "是" : "否（覆盖不足，改给更粗范围）"}</b>
+        ${continuedChips(cu)}
+      </div>
+      <div class="actions">
+        <button class="mini primary js-action" data-action="access" data-entry="${esc(f.entry)}"
+          data-testid="reaccess-${esc(f.id)}">以当前时刻再试取阅并留痕</button>
+        <button class="mini warn js-action" data-action="withdraw_access" data-fact="${esc(f.id)}"
+          data-testid="withdraw-access-${esc(f.id)}">县方要求删除此已交明细</button>
+      </div></div>`;
+  }).join("") : '<p class="statline">暂无已交明细。</p>';
+}
+
+function verdictBadge(v) {
+  const map = { deliver: ["b-green","可投递"], redact: ["b-amber","脱敏后可投"],
+                hold_coarsen: ["b-red","暂缓·改粗范围"], block: ["b-red","禁止投递"] };
+  const [cls, zh] = map[v] || ["b-slate", v];
+  return `<span class="badge ${cls}">${zh} · ${esc(v)}</span>`;
+}
+
+function renderQueue(d) {
+  const q = d.workbench.pending_delivery || [];
+  $("queue-list").innerHTML = q.length ? q.map((r) => {
+    const reasons = (r.reasons || []).map(x =>
+      `<li><span class="kw">${esc(x.code)}</span>：${esc(x.message_zh || "")} ${x.fields ? esc(JSON.stringify(x.fields)) : ""}</li>`).join("");
+    const coarser = r.coarser ? `<div class="meta">可用更粗范围：
+        <span class="arrow">→</span> <code>${esc(r.coarser.entry)}</code>
+        区间 ${esc(JSON.stringify(r.coarser.minutes))}，设备 ${esc(r.coarser.devices)} ≥ ${esc(r.coarser.coverage.minimum)}</div>` : "";
+    return `<div class="item" data-testid="queue-row-${esc(r.package_id)}">
+      <div class="row1"><span class="title">📦 ${esc(r.package_id)} · ${esc(r.entry)}（${esc(r.origin)}）</span>${verdictBadge(r.verdict)}</div>
+      <ul class="meta" style="padding-left:18px;margin:6px 0;">${reasons}</ul>
+      <div class="meta">拟发字段：${esc(JSON.stringify(r.payload_fields))}；当前允许：${esc(JSON.stringify(r.permitted_fields_now))}；
+        必须撤下：<b class="kw">${esc(JSON.stringify(r.must_remove_fields))}</b></div>
+      ${coarser}
+      ${r.open_withdrawal ? '<div class="meta kw">该包裹已有未结/已结撤回单，不得按原明细继续发送。</div>' : ""}
+    </div>`;
+  }).join("") : '<p class="statline">当前没有尚未取得回执的待交包裹。</p>';
+}
+
+function renderTraffic(d) {
+  const tv = d.traffic_view_20_25;
+  $("traffic-list").innerHTML = (tv.counties || []).map((c) => {
+    const cls = c.disclosed ? "ok" : "blocked";
+    let body;
+    if (c.disclosed) {
+      body = `<div class="meta kwg">符合最小披露（设备 ${esc(c.devices)} ≥ ${esc(c.minimum)}，依据 ${esc(c.basis)}）</div>
+              <div class="chips">${c.released_fields.map(f=>`<span class="chip on">${esc(f)}</span>`).join("")}</div>`;
+    } else {
+      const co = c.coarser;
+      body = `<div class="meta"><span class="badge b-red">coverage_insufficient</span>
+              设备 <b class="kw">${esc(c.devices)}</b> &lt; 最小 ${esc(c.minimum)}，已暂缓暴露明细。</div>
+              ${co ? `<div class="meta">返回覆盖不足及可用的更粗范围：
+                <span class="arrow">→</span> <code data-testid="coarser-${esc(c.entry)}">${esc(co.entry)}</code>
+                ${esc(JSON.stringify(co.minutes))} · 设备 ${esc(co.devices)}</div>`
+                : '<div class="meta kw">没有达标的更粗范围可用。</div>'}`;
+    }
+    const sampling = c.sampling_note ? `<div class="meta">采样变更说明：${esc(c.sampling_note)}</div>` : "";
+    return `<div class="county ${cls}" data-testid="traffic-${esc(c.entry)}">
+      <div class="row1"><span class="title">${esc(c.origin)} / ${esc(c.entry)}</span>
+        <span class="statline">${esc(c.granularity)} · 依据 ${esc(c.grant_id || c.basis)}</span></div>
+      ${body}${sampling}</div>`;
+  }).join("");
+}
+
+function renderSummaries(d) {
+  const list = d.workbench.active_summaries || [];
+  $("summary-list").innerHTML = list.length ? list.map((c) => `
+    <div class="item" data-testid="summary-row-${esc(c.package_id)}">
+      <div class="row1"><span class="title">📊 ${esc(c.package_id)} · ${esc(c.entry)}（${esc(c.origin)}）</span>
+        ${statusBadge(c.status, c.status_zh)}</div>
+      <div class="meta">收件回执 t=${esc(c.recipient_receipt)}；聚合粒度，覆盖达标；收窄后保留的 <code>count</code> 仍有效。</div>
+      <div class="actions">
+        <button class="mini warn js-action" data-action="recall" data-package="${esc(c.package_id)}"
+          data-testid="recall-${esc(c.package_id)}">如县方要求：发起撤回</button>
+      </div></div>`).join("")
+    : '<p class="statline">暂无处于“可继续使用”状态的汇总。</p>';
+}
+
+function caseActions(c) {
+  const pid = c.package_id;
+  const openRecall = (c.recalls || []).find(r => !r.confirmed);
+  if (c.status === "withdrawal_confirmed")
+    return '<span class="statline">回执凭据已留存，流程关闭。</span>';
+  let btns = "";
+  if (c.status === "in_transit") {
+    btns += `<button class="mini primary js-action" data-action="receipt" data-package="${esc(pid)}" data-testid="receipt-${esc(pid)}">登记收件方回执</button>`;
+    btns += `<button class="mini warn js-action" data-action="recall" data-package="${esc(pid)}" data-testid="recall-${esc(pid)}">发起撤回</button>`;
+  }
+  if (c.status === "in_transit_recall_pending") {
+    btns += `<button class="mini primary js-action" data-action="receipt" data-package="${esc(pid)}" data-testid="receipt-${esc(pid)}">先收到了：登记收件回执</button>`;
+    if (openRecall) btns += `<button class="mini danger js-action" data-action="ack" data-recall="${esc(openRecall.id)}" data-outcome="intercepted" data-testid="intercept-${esc(pid)}">确认在途拦截</button>`;
+  }
+  if (c.status === "received_pending_deletion" && openRecall) {
+    btns += `<button class="mini danger js-action" data-action="ack" data-recall="${esc(openRecall.id)}" data-outcome="deleted" data-testid="delete-ack-${esc(pid)}">确认删除回执</button>`;
+  }
+  if (c.status === "received_active") {
+    btns += `<button class="mini warn js-action" data-action="recall" data-package="${esc(pid)}">发起撤回/删除</button>`;
+  }
+  return btns ? `<div class="actions">${btns}</div>` : "";
+}
+
+function renderCases(d) {
+  const cases = d.reconciliation.cases || [];
+  $("case-list").innerHTML = cases.map((c) => `
+    <div class="item" data-testid="case-row-${esc(c.package_id)}">
+      <div class="row1">
+        <span class="title">🚚 ${esc(c.package_id)} · ${esc(c.entry)}（${esc(c.origin)}）</span>
+        ${statusBadge(c.status, c.status_zh)}
+      </div>
+      <div class="meta">
+        发件端状态 <code>${esc(c.sender_state || "–")}</code>；
+        收件方回执：<b>${c.recipient_receipt != null ? "t=" + esc(c.recipient_receipt) : "<span class='kw'>尚未取得</span>"}</b>；
+        未结时长：${c.outstanding_since != null ? "自 t=" + esc(c.outstanding_since) : "–"}
+        ${(c.recalls || []).length ? `<br>撤回单：${c.recalls.map(r =>
+          `<code>${esc(r.id)}</code> ${r.confirmed ? '<span class="kwg">已确认</span>' : '<span class="kw">回执未到</span>'}`).join("；")}` : ""}
+      </div>
+      ${caseActions(c)}
+    </div>`).join("");
+}
+
+function renderKpis(d) {
+  $("kpi-pending").textContent = (d.workbench.pending_delivery || []).length;
+  const open = d.reconciliation.open_followups || [];
+  $("kpi-followups").textContent = open.length;
+  const blocked = (d.traffic_view_20_25.counties || []).filter(c => !c.disclosed).length;
+  $("kpi-coverage").textContent = blocked;
+  $("kpi-summaries").textContent = (d.workbench.active_summaries || []).length;
+  const bal = d.reconciliation.balanced;
+  $("balance-badge").textContent = bal ? "平衡" : "未结";
+  $("balance-badge").style.color = bal ? "var(--green)" : "var(--amber)";
+}
+
+async function refresh() {
+  const at = $("clock-input").value ? Number($("clock-input").value) : null;
+  const d = await api("/api/console" + (at !== null ? `?at=${at}` : ""));
+  DATA = d;
+  currentAt = d.at;
+  if (document.activeElement !== $("clock-input")) $("clock-input").value = d.at;
+  renderKpis(d); renderGrants(d); renderHanded(d); renderQueue(d);
+  renderTraffic(d); renderSummaries(d); renderCases(d);
+}
+
+// 事件委托：所有动态动作按钮
+document.addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".js-action");
+  if (!btn) return;
+  const a = btn.dataset.action;
+  if (a === "receipt") await postAction({action:"receipt", package:btn.dataset.package});
+  else if (a === "recall") await postAction({action:"recall", package:btn.dataset.package});
+  else if (a === "ack") await postAction({action:"ack", recall:btn.dataset.recall, outcome:btn.dataset.outcome});
+  else if (a === "access") await postAction({action:"access", entry:btn.dataset.entry});
+  else if (a === "withdraw_access") await postAction({action:"withdraw_access", fact:btn.dataset.fact});
+});
+
+$("clock-apply").addEventListener("click", refresh);
+$("clock-input").addEventListener("keydown", (e) => { if (e.key === "Enter") refresh(); });
+$("reset-btn").addEventListener("click", async () => {
+  await postAction({action:"reset"});
+  toast("运行期状态已重置为种子材料状态");
+  await refresh();
+});
+
+$("admit-sample").addEventListener("click", () => {
+  $("admit-text").value = JSON.stringify({
+    id: "grant-v3-phase2", origin: "county-a", group: "joint-team",
+    purposes: ["outage_review"], fields: ["count", "site_token"],
+    min_aggregate_members: 8, effective: 60,
+    note_zh: "下一期示例：county-a 在 t=60 后授权更严阈值的明细"
+  }, null, 2);
+});
+$("admit-btn").addEventListener("click", async () => {
+  try {
+    const parsed = JSON.parse($("admit-text").value);
+    const r = await api("/api/admit", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({records: parsed})});
+    toast("已接收许可：" + r.admitted.join(", "));
+    $("admit-text").value = "";
+    await refresh();
+  } catch (e) { toast(e.message, true); }
+});
+
+async function showRole(url) {
+  try {
+    const body = await api(url);
+    $("role-output").textContent = JSON.stringify(body, null, 2);
+  } catch (e) { $("role-output").textContent = "错误：" + e.message; }
+}
+function atParam() { const v = $("clock-input").value; return v ? `&at=${Number(v)}` : ""; }
+$("role-county-a").addEventListener("click", () => showRole("/api/role?kind=county&name=county-a" + atParam()));
+$("role-county-b").addEventListener("click", () => showRole("/api/role?kind=county&name=county-b" + atParam()));
+$("role-joint-team").addEventListener("click", () => showRole("/api/role?kind=recipient&group=joint-team" + atParam()));
+$("role-vendor-desk").addEventListener("click", () => showRole("/api/role?kind=recipient&group=vendor-desk" + atParam()));
+$("audit-run").addEventListener("click", () => {
+  const kind = $("audit-kind").value;
+  const scope = $("audit-scope").value.trim();
+  let url = `/api/role?kind=audit&task_kind=${encodeURIComponent(kind)}`;
+  if (scope) scope.split(/[\s,]+/).filter(Boolean).forEach(s => url += "&scope=" + encodeURIComponent(s));
+  url += atParam();
+  showRole(url);
+});
+
+refresh().catch((e) => toast("加载失败：" + e.message, true));
+</script>
+</body>
+</html>
